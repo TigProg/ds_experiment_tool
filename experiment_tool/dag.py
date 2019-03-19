@@ -40,7 +40,7 @@ class DAG:
         Throws exception if there is an end of an edge that is not in dag.
         """
         for (x, y) in edges:
-            if x not in self._graph.keys() or y not in self._graph.keys():
+            if (x not in self._graph) or (y not in self._graph):
                 raise KeyError("No such vertex in a _graph")
             self._graph[x].append(y)
 
