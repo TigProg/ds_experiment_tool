@@ -18,6 +18,10 @@ def fib(n):
     return fib(n - 1) + fib(n - 2)
 
 
+def get_5_numbers():
+    return 1, 1, 2, 1, 3, 1, 30, 30, 30
+
+
 def slow_1(a, s):
     return slow_1(a, s)
 
@@ -52,5 +56,5 @@ def check(x, y, z):
 
 def get_result(u, v):
     if v:
-        return u
-    return None
+        print(u)
+    print('some error')

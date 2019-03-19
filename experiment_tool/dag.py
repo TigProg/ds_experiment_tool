@@ -3,20 +3,37 @@ def read_first_example():
     import experiments.first_example as f
     # add funcs / vertices
     _funcs = [
+        f.get_5_numbers,
         f.slow_1, f.slow_2, f.slow_3,
         f.fib_1, f.fib_2, f.fib_3,
         f.get_sum, f.check, f.get_result,
     ]
-    result_funcs = {
-        i.__name__: i
-        for i in _funcs
-    }
     vertices = [
         i.__name__ for i in _funcs
     ]
-    edges = ...  # FIXME how?
+    result_funcs = {
+        i.__name__: i for i in _funcs
+    }
+    # add data / edges
+    edges = [
+        ('get_5_numbers', 'slow_1'), ('get_5_numbers', 'slow_1'),
+        ('get_5_numbers', 'slow_2'), ('get_5_numbers', 'slow_2'),
+        ('get_5_numbers', 'slow_3'), ('get_5_numbers', 'slow_3'),
+        ('slow_1', 'get_sum'),
+        ('slow_2', 'get_sum'),
+        ('slow_3', 'get_sum'),
+        ('get_5_numbers', 'fib_1'),
+        ('get_5_numbers', 'fib_2'),
+        ('get_5_numbers', 'fib_3'),
+        ('fib_1', 'check'),
+        ('fib_2', 'check'),
+        ('fib_3', 'check'),
+        ('get_sum', 'get_result'),
+    ]
     first_dag = DAG(vertices, edges)
-    result_args = ...
+    result_args = {
+        i: None for i in edges
+    }
     return first_dag, result_funcs, result_args
 
 
