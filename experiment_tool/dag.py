@@ -22,7 +22,7 @@ def read_first_example():
 
 class DAG:
     def __init__(self, vertices, edges):
-        self.graph = {}
+        self._graph = {}
         self._add_vertices(vertices)
         self._add_edges(edges)
         self._validate()
@@ -32,7 +32,7 @@ class DAG:
         Add list of vertices to dag.
         """
         for v in vertices:
-            self.graph.setdefault(v, [])
+            self._graph.setdefault(v, [])
 
     def _add_edges(self, edges):
         """
@@ -40,28 +40,26 @@ class DAG:
         Throws exception if there is an end of an edge that is not in dag.
         """
         for (x, y) in edges:
-            if (x not in self.graph.keys()) or (y not in self.graph.keys()):
-                raise KeyError("No such vertex in a graph")
-            self.graph[x].append(y)
+            if x not in self._graph.keys() or y not in self._graph.keys():
+                raise KeyError("No such vertex in a _graph")
+            self._graph[x].append(y)
 
     def topological_sort(self) -> list:
         """
         Return a topological sort of dag.
         """
         res = []
-        visited = {}
+        visited = set()
 
         def dfs(x):
-            visited[x] = True
-            for y in self.graph[x]:
-                if not visited[y]:
+            visited.add(x)
+            for y in self._graph[x]:
+                if y not in visited:
                     dfs(y)
             res.append(x)
 
-        for v in self.graph.keys():
-            visited.setdefault(v, False)
-        for v in self.graph.keys():
-            if not visited[v]:
+        for v in self._graph:
+            if v not in visited:
                 dfs(v)
         res.reverse()
         return res
@@ -82,7 +80,7 @@ class DAG:
 
         def dfs(x):
             visited[x] = 1
-            for y in self.graph[x]:
+            for y in self._graph[x]:
                 if visited[y] == 1:
                     return True
                 if not visited[y]:
@@ -91,9 +89,9 @@ class DAG:
             visited[x] = 2
             return False
 
-        for v in self.graph.keys():
+        for v in self._graph:
             visited.setdefault(v, 0)
-        for v in self.graph.keys():
+        for v in self._graph:
             if not visited[v]:
                 if dfs(v):
                     raise Exception("Graph contains cycle")
