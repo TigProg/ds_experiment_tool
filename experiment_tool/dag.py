@@ -22,39 +22,79 @@ def read_first_example():
 
 
 class DAG:
-    def __init__(self):
-        raise NotImplementedError
+    def __init__(self, vertices, edges):
+        self.graph = {}
+        self._add_vertices(vertices)
+        self._add_edges(edges)
+        self._validate()
 
     def _add_vertices(self, vertices):
         """
         Add list of vertices to dag.
         """
-        raise NotImplementedError
+        for v in vertices:
+            self.graph.setdefault(v, [])
 
     def _add_edges(self, edges):
         """
         Add list of edges to dag.
-        Throws custom exception if there is an end of an edge that is not in DAG.
+        Throws exception if there is an end of an edge that is not in dag.
         """
-        raise NotImplementedError
+        for (x, y) in edges:
+            if (x not in self.graph.keys()) or (y not in self.graph.keys()):
+                raise KeyError("No such vertex in a graph")
+            self.graph[x].append(y)
 
     def topological_sort(self) -> list:
         """
         Return a topological sort of dag.
         """
-        raise NotImplementedError
+        res = []
+        visited = {}
 
-    def get_subgraph(self, metrics, modified) -> DAG:
-        """
-        Return subgraph that contains all vertices, functions
-        in which should be recalculated in order to obtain desired metrics.
-        """
-        raise NotImplementedError
+        def dfs(x):
+            visited[x] = True
+            for y in self.graph[x]:
+                if not visited[y]:
+                    dfs(y)
+            res.append(x)
 
-    # TODO maybe this is private method?
-    def validate(self):
+        for v in self.graph.keys():
+            visited.setdefault(v, False)
+        for v in self.graph.keys():
+            if not visited[v]:
+                dfs(v)
+        res.reverse()
+        return res
+
+    def get_subgraph(self, metrics, modified):
+        """
+        Return subgraph that contains all vertices, functions in which should be recalculated
+        in order to obtain desired metrics.
+        """
+        return self
+
+    def _validate(self):
         """
         Check if dag is valid.
-        Throws custom exception otherwise.
+        Throws exception otherwise.
         """
-        raise NotImplementedError
+        visited = {}  # values : 0 - not visited, 1 - in, 2 - out
+
+        def dfs(x):
+            visited[x] = 1
+            for y in self.graph[x]:
+                if visited[y] == 1:
+                    return True
+                if not visited[y]:
+                    if dfs(y):
+                        return True
+            visited[x] = 2
+            return False
+
+        for v in self.graph.keys():
+            visited.setdefault(v, 0)
+        for v in self.graph.keys():
+            if not visited[v]:
+                if dfs(v):
+                    raise Exception("Graph contains cycle")
