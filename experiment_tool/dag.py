@@ -1,7 +1,6 @@
 def read_first_example():
     # TODO
     import experiments.first_example as f
-    first_dag = DAG()
     # add funcs / vertices
     _funcs = [
         f.slow_1, f.slow_2, f.slow_3,
@@ -12,49 +11,87 @@ def read_first_example():
         i.__name__: i
         for i in _funcs
     }
-    first_dag._add_vertices([
+    vertices = [
         i.__name__ for i in _funcs
-    ])
-    # add args / edges
-    first_dag._add_edges(...)  # FIXME how?
+    ]
+    edges = ...  # FIXME how?
+    first_dag = DAG(vertices, edges)
     result_args = ...
     return first_dag, result_funcs, result_args
 
 
 class DAG:
-    def __init__(self):
-        raise NotImplementedError
+    def __init__(self, vertices, edges):
+        self._graph = {}
+        self._add_vertices(vertices)
+        self._add_edges(edges)
+        self._validate()
 
     def _add_vertices(self, vertices):
         """
         Add list of vertices to dag.
         """
-        raise NotImplementedError
+        for v in vertices:
+            self._graph.setdefault(v, [])
 
     def _add_edges(self, edges):
         """
         Add list of edges to dag.
-        Throws custom exception if there is an end of an edge that is not in DAG.
+        Throws exception if there is an end of an edge that is not in dag.
         """
-        raise NotImplementedError
+        for (x, y) in edges:
+            if (x not in self._graph) or (y not in self._graph):
+                raise KeyError("No such vertex in a _graph")
+            self._graph[x].append(y)
 
     def topological_sort(self) -> list:
         """
         Return a topological sort of dag.
         """
-        raise NotImplementedError
+        res = []
+        visited = set()
 
-    def get_subgraph(self, metrics, modified) -> DAG:
-        """
-        Return subgraph that contains all vertices, functions
-        in which should be recalculated in order to obtain desired metrics.
-        """
-        raise NotImplementedError
+        def dfs(x):
+            visited.add(x)
+            for y in self._graph[x]:
+                if y not in visited:
+                    dfs(y)
+            res.append(x)
 
-    # TODO maybe this is private method?
-    def validate(self):
+        for v in self._graph:
+            if v not in visited:
+                dfs(v)
+        res.reverse()
+        return res
+
+    def get_subgraph(self, metrics, modified):
+        """
+        Return subgraph that contains all vertices, functions in which should be recalculated
+        in order to obtain desired metrics.
+        """
+        return self
+
+    def _validate(self):
         """
         Check if dag is valid.
-        Throws custom exception otherwise.
+        Throws exception otherwise.
         """
-        raise NotImplementedError
+        visited = {}  # values : 0 - not visited, 1 - in, 2 - out
+
+        def dfs(x):
+            visited[x] = 1
+            for y in self._graph[x]:
+                if visited[y] == 1:
+                    return True
+                if not visited[y]:
+                    if dfs(y):
+                        return True
+            visited[x] = 2
+            return False
+
+        for v in self._graph:
+            visited.setdefault(v, 0)
+        for v in self._graph:
+            if not visited[v]:
+                if dfs(v):
+                    raise Exception("Graph contains cycle")
