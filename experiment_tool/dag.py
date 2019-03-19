@@ -1,7 +1,6 @@
 def read_first_example():
     # TODO
     import experiments.first_example as f
-    first_dag = DAG()
     # add funcs / vertices
     _funcs = [
         f.slow_1, f.slow_2, f.slow_3,
@@ -12,11 +11,11 @@ def read_first_example():
         i.__name__: i
         for i in _funcs
     }
-    first_dag._add_vertices([
+    vertices = [
         i.__name__ for i in _funcs
-    ])
-    # add args / edges
-    first_dag._add_edges(...)  # FIXME how?
+    ]
+    edges = ...  # FIXME how?
+    first_dag = DAG(vertices, edges)
     result_args = ...
     return first_dag, result_funcs, result_args
 
