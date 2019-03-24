@@ -4,12 +4,12 @@ from .dag import DAG
 def example_reader():
     """
     Get experiment, hardcoded function
-    :return: dag, functions, arguments, start_values, metrics
+    :return: dag, functions, arguments
     """
     # create data
     import experiments.first_example as f
     _func = {
-        f.get_5_numbers: [('name',), ('a', 'b', 'c', 's', 'n')],  # TODO
+        f.get_5_numbers: [('name',), ('a', 'b', 'c', 's', 'n')],
         f.slow_1: [('a', 's'), ('id1',)],
         f.slow_2: [('b', 's'), ('id2',)],
         f.slow_3: [('c', 's'), ('id3',)],
@@ -18,7 +18,7 @@ def example_reader():
         f.fib_3: [('n',), ('z',)],
         f.get_sum: [('id1', 'id2', 'id3'), ('u',)],
         f.check: [('x', 'y', 'z'), ('v',)],
-        f.get_result: [('u', 'v'), ('result',)],  # TODO
+        f.get_result: [('u', 'v'), ('result',)],
     }
 
     # functions / vertices

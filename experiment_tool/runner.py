@@ -28,8 +28,8 @@ class Runner:
         for arg in self._args:
             args_with_values[arg] = self._null_value
         self._args = args_with_values
-        for metric_name, metric_value in self._dataset_name.items():  # TODO
-            self._args[metric_name] = metric_value
+        for arg_name, arg_value in self._dataset_name.items():
+            self._args[arg_name] = arg_value
 
     def _execute_function(self, func_name):
         func, func_args, func_res = self._funcs[func_name]
