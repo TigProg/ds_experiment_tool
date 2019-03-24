@@ -18,20 +18,22 @@ def fib(n):
     return fib(n - 1) + fib(n - 2)
 
 
-def get_5_numbers():
-    return 1, 1, 2, 1, 3, 1, 30, 30, 30
+def get_5_numbers(name):
+    if name == 'first_example':
+        return 1, 2, 3, 2, 31
+    raise ValueError
 
 
 def slow_1(a, s):
-    return slow_1(a, s)
+    return slow_identity(a, s)
 
 
 def slow_2(b, s):
-    return slow_1(b, s)
+    return slow_identity(b, s)
 
 
 def slow_3(c, s):
-    return slow_1(c, s)
+    return slow_identity(c, s)
 
 
 def get_sum(a1, b1, c1):
@@ -56,5 +58,5 @@ def check(x, y, z):
 
 def get_result(u, v):
     if v:
-        print(u)
-    print('some error')
+        return u
+    raise ValueError
