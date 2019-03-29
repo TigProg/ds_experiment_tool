@@ -19,8 +19,9 @@ def fib(n):
 
 
 def get_5_numbers(name):
-    if name == 'first_example':
-        return 1, 2, 3, 2, 31
+    result = tuple(map(int, name.split()))
+    if len(result) == 5:
+        return result
     raise ValueError
 
 

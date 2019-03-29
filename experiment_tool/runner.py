@@ -19,7 +19,7 @@ class Runner:
         self._dag = self._dag.get_subgraph(None, None)
         for func_name in self._dag.topological_sort():
             self._execute_function(func_name)
-        print(time() - START_TIME)  # FIXME
+        print(time() - START_TIME, 'seconds')  # FIXME
         for metric in self._metrics:
             print(self._args[metric])
 
@@ -46,4 +46,4 @@ class Runner:
 
 
 if __name__ == '__main__':
-    Runner('first_example', {'name': 'first_example'}, ('result', )).run()
+    Runner('first_example', {'name': '1 2 3 2 31'}, ('result', )).run()
