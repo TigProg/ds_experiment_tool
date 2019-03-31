@@ -1,37 +1,45 @@
 from time import time
+from sys import stderr
+from typing import Any, Dict, Tuple
+
 from experiment_tool.dag_reader import example_reader
 
 
 class Runner:
-    def __init__(self, experiment_name, dataset_name, metrics):
-        self._experiment_name = experiment_name
-        self._dataset_name = dataset_name
-        self._metrics = metrics
-        self._dag = None
-        self._funcs = None
-        self._args = None
-        self._null_value = object()
+    def __init__(self,
+                 experiment_name: str,
+                 dataset_name: Dict[str, Any],
+                 metrics: Tuple[str, ...]
+                 ) -> None:
+        self.experiment_name = experiment_name
+        self.init_args = dataset_name
+        self.metrics = metrics
 
-    def run(self):
-        START_TIME = time()  # FIXME
-        self._dag, self._funcs, self._args = example_reader()
-        self._init_args()
+        self._null_value = object()
+        self._dag, self._funcs, arg_names = example_reader(experiment_name)
+        self._init_args(arg_names)
+
+    def _init_args(self, arg_names: set) -> None:
+        self._args = {
+            arg: self._null_value for arg in arg_names
+        }
+        for arg_name, arg_value in self.init_args.items():
+            self._args[arg_name] = arg_value
+
+    def run(self) -> None:
+        start_time = time()  # TODO: add logging
+
         self._dag = self._dag.get_subgraph(None, None)
         for func_name in self._dag.topological_sort():
             self._execute_function(func_name)
-        print(time() - START_TIME, 'seconds')  # FIXME
-        for metric in self._metrics:
-            print(self._args[metric])
+        for metric in self.metrics:
+            print('{name}: {value}'.format(
+                name=metric, value=self._args[metric]
+            ))
 
-    def _init_args(self):
-        args_with_values = {}
-        for arg in self._args:
-            args_with_values[arg] = self._null_value
-        self._args = args_with_values
-        for arg_name, arg_value in self._dataset_name.items():
-            self._args[arg_name] = arg_value
+        print(time() - start_time, 'seconds', file=stderr)
 
-    def _execute_function(self, func_name):
+    def _execute_function(self, func_name: str) -> None:
         func, func_args, func_res = self._funcs[func_name]
         in_value = [
             self._args[i] for i in func_args
@@ -46,4 +54,4 @@ class Runner:
 
 
 if __name__ == '__main__':
-    Runner('first_example', {'name': '1 2 3 2 31'}, ('result', )).run()
+    Runner('first_example', {'name': '1 2 3 0 20'}, ('result',)).run()
