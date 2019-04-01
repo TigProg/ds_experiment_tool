@@ -64,9 +64,8 @@ class DAG:
         def dfs(x):
             visited.add(x)
             recalculate = False
-            if not self._graph[x]:
-                if x in metrics:
-                    recalculate = True
+            if (not self._graph[x]) and (x in metrics):
+                recalculate = True
             for y in self._graph[x]:
                 if y not in visited:
                     if dfs(y):
