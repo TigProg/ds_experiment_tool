@@ -1,11 +1,11 @@
-from typing import Tuple, Dict, List, Set, Any, Callable
+from typing import Callable, Dict, List, Set, Tuple
 
 from .dag import DAG
 
 
-def get_first_experiment(experiment_name: str) -> Dict[Callable, List[Any]]:
+def get_first_experiment(experiment_name: str) -> Dict[Callable, List]:
     """
-    Get hardcoded function
+    Get hardcoded experiment
     :param experiment_name:
     :return: functions with arguments
     """
@@ -27,7 +27,7 @@ def get_first_experiment(experiment_name: str) -> Dict[Callable, List[Any]]:
 
 
 def example_reader(experiment_name: str) \
-        -> Tuple[DAG, Dict[str, List[Any]], Set[str]]:
+        -> Tuple[DAG, Dict[str, List], Set[str]]:
     """
     Get experiment by name
     :return: dag, functions, arguments
