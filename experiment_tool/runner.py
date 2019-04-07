@@ -5,7 +5,7 @@ from sys import stderr
 from typing import Any, Dict, Set, Tuple
 
 from experiment_tool.dag_reader import example_reader
-from experiment_tool.storage import ExperimentsStorage
+from experiment_tool.storage_sqlite import SQLiteExpStorage
 
 
 class Runner:
@@ -68,7 +68,7 @@ class Runner:
     def _check_graph_structure(self):
         print('start _check_graph_structure')
         self._storage_obj = self._storage_obj \
-                            or ExperimentsStorage(self._storage_path)
+                            or SQLiteExpStorage(self._storage_path)
         exp_json = json.dumps({
             name: [value[1], value[2]]
             for name, value in self._funcs.items()
@@ -81,7 +81,7 @@ class Runner:
     def _add_graph_structure(self):
         print('start _add_graph_structure')
         self._storage_obj = self._storage_obj \
-                            or ExperimentsStorage(self._storage_path)
+                            or SQLiteExpStorage(self._storage_path)
         exp_json = json.dumps({
             name: [value[1], value[2]]
             for name, value in self._funcs.items()
@@ -94,14 +94,14 @@ class Runner:
     def _get_functions_from_storage(self):
         print('start _get_functions_from_storage')
         self._storage_obj = self._storage_obj \
-                            or ExperimentsStorage(self._storage_path)
+                            or SQLiteExpStorage(self._storage_path)
         print('end _get_functions_from_storage')
         return [
             i for i in self._storage_obj.get_functions()
         ]
-            self._storage_obj.add_experiment(
-            self.experiment_name, exp_json
-        )
+        #     self._storage_obj.add_experiment(
+        #     self.experiment_name, exp_json
+        # )
 
     def _execute_function(self, func_name: str) -> None:
         func, func_args, func_res = self._funcs[func_name]

@@ -1,6 +1,6 @@
 from typing import Callable, Dict, List, Set, Tuple
 
-from .dag import DAG
+from experiment_tool.dag import DAG
 
 
 def get_first_experiment(experiment_name: str) -> Dict[Callable, List]:
