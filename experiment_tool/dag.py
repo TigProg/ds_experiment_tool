@@ -51,7 +51,6 @@ class DAG:
                 if y not in visited:
                     dfs(y)
             res.append(x)
-
         for v in self._graph:
             if v not in visited:
                 dfs(v)
@@ -77,6 +76,8 @@ class DAG:
                 if y not in visited:
                     if dfs(y):
                         recalculate = True
+                elif y in vertices:
+                    recalculate = True
             if recalculate:
                 vertices.add(x)
                 return True
