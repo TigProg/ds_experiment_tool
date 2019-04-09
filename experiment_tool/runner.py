@@ -84,15 +84,23 @@ class Runner:
             exp_id = self._storage.add_experiment(self.exp_name, exp_json)
             modified = set(self._funcs)
 
+        v_with_metrics = set()
+        for func_name, func_info in self._funcs.items():
+            output_args = func_info[2]
+            if set(output_args).intersection(self.metrics):
+                v_with_metrics.add(func_name)
+
         log.debug('metrics: {}'.format(self.metrics))
+        log.debug('metrics_funcs: {}'.format(v_with_metrics))
         log.debug('modified: {}'.format(modified))
 
         log.debug('old dag: {}'.format(self._dag._graph))
-        self._dag = self._dag.get_subgraph(self.metrics, modified)
+        self._dag = self._dag.get_subgraph(v_with_metrics, modified)
         log.debug('new dag: {}'.format(self._dag._graph))
+
         log.debug('topological sort: {}'.format(self._dag.topological_sort()))
         for func_name in self._dag.topological_sort():
-            log.debug('execute function: {name}'.format(func_name))
+            log.debug('execute function: {name}'.format(name=func_name))
             self._execute_function(func_name)
 
         # FIXME problem with saving arguments == self._null_value()
