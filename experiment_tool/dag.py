@@ -22,6 +22,16 @@ class DAG:
                 raise KeyError("No such vertex in a _graph")
             self._graph[x].append(y)
 
+    def get_vertices(self):
+        return self._graph.keys()
+
+    def get_edges(self):
+        edges = []
+        for v in self._graph:
+            for u in self._graph[v]:
+                edges.append((v, u))
+        return edges
+
     def topological_sort(self) -> list:
         """
         Return a topological sort of dag.
@@ -47,7 +57,34 @@ class DAG:
         Return subgraph that contains all vertices, functions in which should be recalculated
         in order to obtain desired metrics.
         """
-        return self
+        vertices = set()
+        edges = []
+        visited = set()
+
+        def dfs(x):
+            visited.add(x)
+            recalculate = False
+            if (not self._graph[x]) and (x in metrics):
+                recalculate = True
+            for y in self._graph[x]:
+                if y not in visited:
+                    if dfs(y):
+                        recalculate = True
+            if recalculate:
+                vertices.add(x)
+                return True
+            return False
+
+        for v in modified:
+            if v not in visited:
+                dfs(v)
+
+        for (u, v) in self.get_edges():
+            if (u in vertices) and (v in vertices):
+                edges.append((u, v))
+
+        res = DAG(vertices, edges)
+        return res
 
     def _validate(self):
         """
