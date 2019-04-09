@@ -1,8 +1,13 @@
+import logging
+import pickle
 import sqlite3
 from contextlib import contextmanager
-from typing import Dict, List, Set
+from typing import Any, Dict, List, Set
 
 from experiment_tool.storage import ExperimentStorage
+
+
+log = logging.getLogger(__name__)
 
 
 class SQLiteExpStorage(ExperimentStorage):
@@ -32,7 +37,6 @@ class SQLiteExpStorage(ExperimentStorage):
             result = {res[0] for res in result}
         else:
             result = set()
-        print('_get_all_tables:', result)  # FIXME add logging
         return result
 
     def _init_tables(self) -> None:
@@ -40,7 +44,7 @@ class SQLiteExpStorage(ExperimentStorage):
         requiring_tables = {
             'experiments': 'id INTEGER, name TEXT, structure TEXT',
             'functions': 'exp_id INTEGER, name TEXT, func_code TEXT',
-            'arguments': 'exp_id INTEGER, name TEXT, arg_value TEXT',
+            'arguments': 'exp_id INTEGER, name TEXT, arg_value BLOB',
         }
         for table_name, table_schema in requiring_tables.items():
             if table_name not in existing_table:
@@ -56,7 +60,7 @@ class SQLiteExpStorage(ExperimentStorage):
         with self._cursor() as cursor:
             result = cursor.execute(
                 """
-                SELECT id FROM experiments 
+                SELECT id FROM experiments
                 WHERE name = :name AND structure = :structure
                 """,
                 {'name': exp_name, 'structure': structure}
@@ -65,7 +69,6 @@ class SQLiteExpStorage(ExperimentStorage):
             result = [res[0] for res in result]
         else:
             result = []
-        print('get_experiment_ids:', result)  # FIXME add logging
         return result
 
     def add_experiment(self, exp_name: str, structure: str) -> int:
@@ -74,14 +77,14 @@ class SQLiteExpStorage(ExperimentStorage):
                 """
                 INSERT INTO experiments
                 VALUES (
-                    (SELECT IFNULL(MAX(id), -1) + 1 FROM experiments), 
+                    (SELECT IFNULL(MAX(id), -1) + 1 FROM experiments),
                     :name, :structure)
                 """,
                 {'name': exp_name, 'structure': structure}
             )
         return max(self.get_experiment_ids(exp_name, structure))
 
-    def get_experiment_functions(self, exp_id: int) -> Dict[str, str]:
+    def get_functions(self, exp_id: int) -> Dict[str, str]:
         with self._cursor() as cursor:
             result = cursor.execute(
                 """
@@ -92,14 +95,12 @@ class SQLiteExpStorage(ExperimentStorage):
                 {'id': exp_id}
             ).fetchall()
         if result:
-            result = {item[0]: item[1] for item in result.items()}
+            result = {item[0]: item[1] for item in result}
         else:
             result = {}
         return result
 
-    def add_experiment_functions(self,
-                                 exp_id: int,
-                                 funcs: Dict[str, str]) -> None:
+    def add_functions(self, exp_id: int, funcs: Dict[str, str]) -> None:
         func_records = [
             (exp_id, name, code)
             for name, code in funcs.items()
@@ -110,7 +111,7 @@ class SQLiteExpStorage(ExperimentStorage):
                 func_records
             )
 
-    def get_experiment_arguments(self, exp_id: int) -> Dict[str, str]:
+    def get_arguments(self, exp_id: int) -> Dict[str, Any]:
         with self._cursor() as cursor:
             result = cursor.execute(
                 """
@@ -121,16 +122,14 @@ class SQLiteExpStorage(ExperimentStorage):
                 {'id': exp_id}
             ).fetchall()
         if result:
-            result = {item[0]: item[1] for item in result}
+            result = {item[0]: pickle.loads(item[1]) for item in result}
         else:
             result = {}
         return result
 
-    def add_experiment_arguments(self,
-                                 exp_id: int,
-                                 args: Dict[str, str]) -> None:
+    def add_arguments(self, exp_id: int, args: Dict[str, Any]) -> None:
         arg_records = [
-            (exp_id, name, arg_value)
+            (exp_id, name, pickle.dumps(arg_value))
             for name, arg_value in args.items()
         ]
         with self._cursor() as cursor:

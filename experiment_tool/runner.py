@@ -1,11 +1,14 @@
 import inspect
 import json
+import logging
 from time import time
-from sys import stderr
 from typing import Any, Dict, Set, Tuple
 
 from experiment_tool.dag_reader import example_reader
 from experiment_tool.storage_sqlite import SQLiteExpStorage
+
+
+log = logging.getLogger(__name__)
 
 
 class Runner:
@@ -14,16 +17,15 @@ class Runner:
                  dataset_name: Dict[str, Any],
                  metrics: Tuple[str, ...]
                  ) -> None:
-        self.experiment_name = experiment_name
+        self.exp_name = experiment_name
         self.init_args = dataset_name
         self.metrics = metrics
 
         self._null_value = object()
-        self._dag, self._funcs, arg_names = example_reader(experiment_name)
+        self._dag, self._funcs, arg_names = example_reader(self.exp_name)
         self._init_args(arg_names)
 
-        self._storage_path = 'test.db'
-        self._storage_obj = None
+        self._storage = SQLiteExpStorage(path='test.db')
 
     def _init_args(self, arg_names: Set[str]) -> None:
         self._args = {
@@ -33,75 +35,95 @@ class Runner:
             self._args[arg_name] = arg_value
 
     def run(self) -> None:
-        start_time = time()  # TODO: add logging
+        start_time = time()
 
-        exp_id = self._check_graph_structure()
-        # exp_id = self._init_graph_id()
-        # exit()
-        modified = set()
-        if exp_id is not None:
-            print('EXIT')
-            exit()
-            for _, func_name, func_text in self._get_functions_from_storage():
-                if inspect.getsource(self._funcs[func_name]) != func_text:
+        exp_json = json.dumps(
+            {name: value[1:] for name, value in self._funcs.items()},
+            sort_keys=True
+        )
+        exp_ids = self._storage.get_experiment_ids(self.exp_name, exp_json)
+
+        if exp_ids:
+            log.info(
+                'experiments with a similar structure are found with ids: {}'\
+                    .format(exp_ids)
+            )
+            exp_id = exp_ids[-1]  # get last experiment id
+
+            # load all arguments
+            modified_init_args = set()
+
+            saves_arguments = self._storage.get_arguments(exp_id)
+            assert saves_arguments.keys() == self._args.keys(), \
+                'some bug in loading arguments'
+            for arg_name, arg_value in saves_arguments.items():
+                if arg_name in self.init_args:
+                    if arg_value != self.init_args[arg_name]:
+                        modified_init_args.add(arg_name)
+                else:
+                    self._args[arg_name] = arg_value
+
+            # load all functions
+            modified = set()
+
+            saves_functions = self._storage.get_functions(exp_id)
+            assert saves_functions.keys() == self._funcs.keys(), \
+                'some bug in loading functions'
+            for func_name, func_code in saves_functions.items():
+                if inspect.getsource(self._funcs[func_name][0]) != func_code:
                     modified.add(func_name)
-            # for _, arg_name,
-            # """надо проверить отдельные функции"""
-            # """затем делать как обычно"""
-            # # TODO
+
+            # FIXME: add functions to modified if input argument
+            #  of this function there are in modified_init_args
+            for func_name, func_info in self._funcs.items():
+                input_args = func_info[1]
+                if modified_init_args.intersection(input_args):
+                    modified.add(func_name)
+        else:
+            log.info('experiments with a similar structure were not found')
+            exp_id = self._storage.add_experiment(self.exp_name, exp_json)
+            modified = None
 
         self._dag = self._dag.get_subgraph(self.metrics, modified)
         for func_name in self._dag.topological_sort():
             self._execute_function(func_name)
+
+        # FIXME problem with saving arguments == self._null_value()
+        if modified is None:
+            # experiment was not running before
+            # save ALL args and funcs in db
+            self._storage.add_functions(
+                exp_id,
+                {
+                    func_name: inspect.getsource(func_info[0])
+                    for func_name, func_info in self._funcs.items()
+                }
+            )
+            self._storage.add_arguments(exp_id, self._args)
+        elif modified:
+            # modified is set(...)
+            # something was running
+            # save ALL args and funcs in db
+            self._storage.add_functions(
+                exp_id,
+                {
+                    func_name: inspect.getsource(func_info[0])
+                    for func_name, func_info in self._funcs.items()
+                }
+            )
+            self._storage.add_arguments(exp_id, self._args)
+        else:
+            # modified is empty set
+            # nothing was running
+            # nothing to do here
+            pass
+
         for metric in self.metrics:
-            print('{name}: {value}'.format(
+            log.info('Metric {name}={value}'.format(
                 name=metric, value=self._args[metric]
             ))
 
-        # if exp_id is None:
-        #     exp_id = self._add_graph_structure()
-        #     exit()
-        #     # TODO
-
-        print(time() - start_time, 'seconds', file=stderr)
-
-    def _check_graph_structure(self):
-        print('start _check_graph_structure')
-        self._storage_obj = self._storage_obj \
-                            or SQLiteExpStorage(self._storage_path)
-        exp_json = json.dumps({
-            name: [value[1], value[2]]
-            for name, value in self._funcs.items()
-        }, sort_keys=True)
-        print('end _check_graph_structure')
-        return self._storage_obj.get_experiment_id(
-            self.experiment_name, exp_json
-        )
-
-    def _add_graph_structure(self):
-        print('start _add_graph_structure')
-        self._storage_obj = self._storage_obj \
-                            or SQLiteExpStorage(self._storage_path)
-        exp_json = json.dumps({
-            name: [value[1], value[2]]
-            for name, value in self._funcs.items()
-        }, sort_keys=True)
-        print('end _add_graph_structure')
-        return self._storage_obj.add_experiment(
-            self.experiment_name, exp_json
-        )
-
-    def _get_functions_from_storage(self):
-        print('start _get_functions_from_storage')
-        self._storage_obj = self._storage_obj \
-                            or SQLiteExpStorage(self._storage_path)
-        print('end _get_functions_from_storage')
-        return [
-            i for i in self._storage_obj.get_functions()
-        ]
-        #     self._storage_obj.add_experiment(
-        #     self.experiment_name, exp_json
-        # )
+        log.info('{} seconds'.format(time() - start_time))
 
     def _execute_function(self, func_name: str) -> None:
         func, func_args, func_res = self._funcs[func_name]
@@ -115,7 +137,3 @@ class Runner:
             out_value = (out_value,)
         for arg_name, arg_value in zip(func_res, out_value):
             self._args[arg_name] = arg_value
-
-
-if __name__ == '__main__':
-    Runner('first_example', {'name': '1 2 3 0 20'}, ('result',)).run()

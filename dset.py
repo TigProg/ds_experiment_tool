@@ -1,0 +1,15 @@
+import logging
+
+log = logging.getLogger(__name__)
+logging.basicConfig(
+    format='%(asctime)-24s %(levelname)-9s %(name)-31s %(message)s',
+    level=logging.DEBUG,
+)
+
+from experiment_tool.runner import Runner
+
+
+if __name__ == '__main__':
+    log.info('Started')
+    Runner('first_example', {'name': '1 2 3 0 20'}, ('result', )).run()
+    log.info('Finished')

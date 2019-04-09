@@ -4,10 +4,6 @@ from typing import Any, Dict, List
 
 class ExperimentStorage:
     @abstractmethod
-    def __init__(self) -> None:
-        pass
-
-    @abstractmethod
     def get_experiment_ids(self, exp_name: str, structure: str) -> List[int]:
         pass
 
@@ -16,23 +12,19 @@ class ExperimentStorage:
         pass
 
     @abstractmethod
-    def get_experiment_functions(self, exp_id: int) -> Dict[str, Any]:
+    def get_functions(self, exp_id: int) -> Dict[str, Any]:
         pass
 
     @abstractmethod
-    def add_experiment_functions(self,
-                                 exp_id: int,
-                                 funcs: Dict[str, Any]) -> None:
+    def add_functions(self, exp_id: int, funcs: Dict[str, Any]) -> None:
         pass
 
     @abstractmethod
-    def get_experiment_arguments(self, exp_id: int) -> Dict[str, Any]:
+    def get_arguments(self, exp_id: int) -> Dict[str, Any]:
         pass
 
     @abstractmethod
-    def add_experiment_arguments(self,
-                                 exp_id: int,
-                                 args: Dict[str, Any]) -> None:
+    def add_arguments(self, exp_id: int, args: Dict[str, Any]) -> None:
         pass
 
     # TODO: maybe for DSET-3
