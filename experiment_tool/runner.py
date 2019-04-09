@@ -82,14 +82,21 @@ class Runner:
         else:
             log.info('experiments with a similar structure were not found')
             exp_id = self._storage.add_experiment(self.exp_name, exp_json)
-            modified = None
+            modified = set(self._funcs)
 
+        log.debug('metrics: {}'.format(self.metrics))
+        log.debug('modified: {}'.format(modified))
+
+        log.debug('old dag: {}'.format(self._dag._graph))
         self._dag = self._dag.get_subgraph(self.metrics, modified)
+        log.debug('new dag: {}'.format(self._dag._graph))
+        log.debug('topological sort: {}'.format(self._dag.topological_sort()))
         for func_name in self._dag.topological_sort():
+            log.debug('execute function: {name}'.format(func_name))
             self._execute_function(func_name)
 
         # FIXME problem with saving arguments == self._null_value()
-        if modified is None:
+        if modified == set(self._funcs):
             # experiment was not running before
             # save ALL args and funcs in db
             self._storage.add_functions(

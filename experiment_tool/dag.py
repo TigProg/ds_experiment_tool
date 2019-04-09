@@ -1,3 +1,8 @@
+import logging
+
+log = logging.getLogger(__name__)
+
+
 class DAG:
     def __init__(self, vertices, edges):
         self._graph = {}
@@ -36,6 +41,7 @@ class DAG:
         """
         Return a topological sort of dag.
         """
+        log.debug('start topological sort')
         res = []
         visited = set()
 
@@ -50,6 +56,7 @@ class DAG:
             if v not in visited:
                 dfs(v)
         res.reverse()
+        log.debug('finish topological sort')
         return res
 
     def get_subgraph(self, metrics, modified):

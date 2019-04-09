@@ -11,5 +11,5 @@ from experiment_tool.runner import Runner
 
 if __name__ == '__main__':
     log.info('Started')
-    Runner('first_example', {'name': '1 2 3 0 20'}, ('result', )).run()
+    Runner('first_example', {'name': '1 2 3 2 31'}, ('result', )).run()
     log.info('Finished')
