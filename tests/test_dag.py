@@ -1,5 +1,7 @@
+import pytest
+import random
+
 from experiment_tool.dag import DAG
-import random, pytest
 
 
 def dag_1():

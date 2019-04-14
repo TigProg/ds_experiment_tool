@@ -1,29 +1,41 @@
+import importlib
+import logging
+import os
+import sys
 from typing import Callable, Dict, List, Set, Tuple
 
 from experiment_tool.dag import DAG
 
+log = logging.getLogger(__name__)
 
-def get_first_experiment(experiment_name: str) -> Dict[Callable, List]:
+
+def get_experiment(experiment_name: str, package: str = 'experiments') \
+        -> Dict[Callable, List]:
     """
     Get hardcoded experiment
     :param experiment_name:
+    :param: package:
     :return: functions with arguments
     """
-    if experiment_name == 'first_example':
-        import experiments.first_example as f
-        return {
-            f.get_5_numbers: [('name',), ('a', 'b', 'c', 's', 'n')],
-            f.slow_1: [('a', 's'), ('id1',)],
-            f.slow_2: [('b', 's'), ('id2',)],
-            f.slow_3: [('c', 's'), ('id3',)],
-            f.fib_1: [('n',), ('x',)],
-            f.fib_2: [('n',), ('y',)],
-            f.fib_3: [('n',), ('z',)],
-            f.get_sum: [('id1', 'id2', 'id3'), ('u',)],
-            f.check: [('x', 'y', 'z'), ('v',)],
-            f.get_result: [('u', 'v'), ('result',)],
-        }
-    raise ValueError('uncorrect experiment name {}'.format(experiment_name))
+    path = sys.path
+    path_to_exp = '{path}/{package}'.format(
+        path=os.getcwd(), package=package
+    )
+    sys.path.insert(0, path_to_exp)
+    try:
+        module = importlib.import_module(experiment_name)
+        log.debug('module with experiment successfully loaded')
+        experiment = module.__dict__['experiment']
+        log.debug('experiment successfully loaded')
+        return experiment
+    except ModuleNotFoundError:
+        log.error('module  with experiment failed to load')
+        raise
+    except KeyError:
+        log.error('experiment failed to load')
+        raise
+    finally:
+        sys.path = path
 
 
 def example_reader(experiment_name: str) \
@@ -33,7 +45,7 @@ def example_reader(experiment_name: str) \
     :return: dag, functions, arguments
     """
     # get data
-    _func = get_first_experiment(experiment_name)
+    _func = get_experiment(experiment_name)
 
     # functions
     functions = {

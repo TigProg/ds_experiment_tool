@@ -95,11 +95,11 @@ class Runner:
         log.debug('modified: {}'.format(modified))
 
         log.debug('old dag: {}'.format(self._dag._graph))
-        self._dag = self._dag.get_subgraph(v_with_metrics, modified)
-        log.debug('new dag: {}'.format(self._dag._graph))
+        new_dag = self._dag.get_subgraph(v_with_metrics, modified)
+        log.debug('new dag: {}'.format(new_dag._graph))
 
-        log.debug('topological sort: {}'.format(self._dag.topological_sort()))
-        for func_name in self._dag.topological_sort():
+        log.debug('topological sort: {}'.format(new_dag.topological_sort()))
+        for func_name in new_dag.topological_sort():
             log.debug('execute function: {name}'.format(name=func_name))
             self._execute_function(func_name)
 

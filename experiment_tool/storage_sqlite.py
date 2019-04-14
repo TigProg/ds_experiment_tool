@@ -23,6 +23,7 @@ class SQLiteExpStorage(ExperimentStorage):
             yield cursor
         except sqlite3.Error:
             # TODO: add error handling
+            log.error('some problem with connection to database ')
             raise
         finally:
             self.conn.commit()
