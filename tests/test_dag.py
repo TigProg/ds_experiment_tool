@@ -5,10 +5,14 @@ from experiment_tool.dag import DAG
 
 
 def dag_1():
-    vertices = list(range(10))
+    vertices = ['get_5_numbers', 'slow_1', 'slow_2', 'slow_3', 'fib_1', 'fib_2', 'fib_3',
+                'get_sum', 'check', 'get_result']
     random.shuffle(vertices)
-    edges = [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (1, 7),
-             (2, 7), (3, 7), (4, 8), (5, 8), (6, 8), (7, 9), (8, 9)]
+    edges = [('get_5_numbers', 'slow_1'), ('get_5_numbers', 'slow_2'), ('get_5_numbers', 'slow_3'),
+             ('get_5_numbers', 'fib_1'), ('get_5_numbers', 'fib_2'), ('get_5_numbers', 'fib_3'),
+             ('slow_1', 'get_sum'), ('slow_2', 'get_sum'), ('slow_3', 'get_sum'),
+             ('fib_1', 'check'), ('fib_2', 'check'), ('fib_3', 'check'),
+             ('get_sum', 'get_result'), ('check', 'get_result')]
     return DAG(vertices, edges)
 
 
@@ -16,6 +20,15 @@ def dag_2():
     vertices = list(range(8))
     random.shuffle(vertices)
     edges = [(0, 1), (1, 2), (1, 4), (2, 3), (4, 5), (4, 6)]
+    """
+                        0
+                        |
+                        1
+                       / \
+                      2   4      7
+                     /   / \
+                    3   5   6
+    """
     return DAG(vertices, edges)
 
 
@@ -44,7 +57,8 @@ def check_topological_sort(dag, sorted_list):
 
 
 @pytest.fixture(scope="function",
-                params=[(dag_1(), [5], [9], ({5, 9, 8}, {(8, 9), (5, 8)})),
+                params=[(dag_1(), ['fib_2'], ['get_result'],
+                        ({'fib_2', 'get_result', 'check'}, {('check', 'get_result'), ('fib_2', 'check')})),
                         (dag_2(), [0], [5, 7], ({1, 4, 0, 5}, {(0, 1), (4, 5), (1, 4)}))],
                 ids=["first_example", "custom_graph_2"])
 def param_get_subgraph(request):
