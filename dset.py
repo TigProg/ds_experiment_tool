@@ -2,8 +2,8 @@ import logging
 
 log = logging.getLogger(__name__)
 logging.basicConfig(
-    format='%(asctime)-24s %(levelname)-9s %(name)-31s %(message)s',
-    level=logging.DEBUG,
+    format='%(asctime)-24s %(levelname)-9s %(name)-37s %(message)s',
+    level=logging.INFO,
 )
 
 from experiment_tool.runner import Runner

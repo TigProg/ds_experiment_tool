@@ -20,7 +20,7 @@ def dag_2():
     vertices = list(range(8))
     random.shuffle(vertices)
     edges = [(0, 1), (1, 2), (1, 4), (2, 3), (4, 5), (4, 6)]
-    """
+    r"""
                         0
                         |
                         1
