@@ -17,10 +17,9 @@ def get_experiment(experiment_name: str, package: str = 'experiments') \
     :param: package:
     :return: functions with arguments
     """
-    path = sys.path
-    path_to_exp = '{path}/{package}'.format(
-        path=os.getcwd(), package=package
-    )
+    saved_path = sys.path
+    path_to_exp = os.path.join(os.getcwd(), package)
+
     sys.path.insert(0, path_to_exp)
     try:
         module = importlib.import_module(experiment_name)
@@ -29,13 +28,13 @@ def get_experiment(experiment_name: str, package: str = 'experiments') \
         log.debug('experiment successfully loaded')
         return experiment
     except ModuleNotFoundError:
-        log.error('module  with experiment failed to load')
+        log.error('module %s with experiment failed to load', package)
         raise
     except KeyError:
-        log.error('experiment failed to load')
+        log.error('experiment from module %s failed to load', package)
         raise
     finally:
-        sys.path = path
+        sys.path = saved_path
 
 
 def example_reader(experiment_name: str) \
@@ -44,22 +43,18 @@ def example_reader(experiment_name: str) \
     Get experiment by name
     :return: dag, functions, arguments
     """
-    # get data
     _func = get_experiment(experiment_name)
 
-    # functions
     functions = {
         key.__name__: [key, value[0], value[1]]
         for key, value in _func.items()
     }
 
-    # arguments
     arguments = set()
     for in_args, out_args in _func.values():
         arguments.update(in_args)
         arguments.update(out_args)
 
-    # dag
     vertices = [
         key.__name__ for key in _func
     ]

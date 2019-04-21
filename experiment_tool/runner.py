@@ -1,7 +1,8 @@
 import logging
 from time import time
-from typing import Any, Dict, Set, Tuple
+from typing import Any, Dict, Tuple
 
+from experiment_tool.utils import Scope
 from experiment_tool.dag_reader import example_reader
 from experiment_tool.function_run_storage import FunctionRunStorage
 
@@ -19,18 +20,12 @@ class Runner:
         self.init_args = dataset_name
         self.metrics = metrics
 
-        self._null_value = object()
         self._dag, self._funcs, arg_names = example_reader(self.exp_name)
-        self._init_args(arg_names)
-
-        self._storage = FunctionRunStorage(path='test.db')
-
-    def _init_args(self, arg_names: Set[str]) -> None:
-        self._args = {
-            arg: self._null_value for arg in arg_names
-        }
+        self._args = Scope(arg_names)
         for arg_name, arg_value in self.init_args.items():
             self._args[arg_name] = arg_value
+
+        self._storage = FunctionRunStorage(path='test.db')
 
     def run(self) -> None:
         start_time = time()
@@ -51,24 +46,13 @@ class Runner:
 
     def _execute_function(self, func_name: str) -> None:
         func_obj, args_names, result_names = self._funcs[func_name]
-        args_mapping = {i: self._args[i] for i in args_names}
-        if self._null_value in args_mapping.values():
-            not_defined_vars = (
-                i for i in args_mapping.values() if i is self._null_value
-            )
-            error_msg = \
-                'variable(s) {} is/are not defined while running {}'.format(
-                    not_defined_vars, func_name
-                )
-            log.error(error_msg)
-            raise ValueError(error_msg)
-
+        args_mapping = self._args.get_subdict(args_names)
         func_result = self._storage.get_function_result(func_obj, args_mapping)
 
         if func_result is None:
             log.info('calculate the function %s', func_name)
             args_order = [args_mapping[arg_name] for arg_name in args_names]
-            func_result = func_obj(*args_order)
+            func_result = isolated_function_running(func_obj, args_order)
             func_result = (func_result, )  # TODO think about this
             self._storage.add_function(func_obj, args_mapping, func_result)
         else:
@@ -79,3 +63,7 @@ class Runner:
         else:
             for arg_name, arg_value in zip(result_names, *func_result):
                 self._args[arg_name] = arg_value
+
+
+def isolated_function_running(func, args):
+    return func(*args)
