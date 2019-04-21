@@ -20,7 +20,7 @@ def dag_2():
     vertices = list(range(8))
     random.shuffle(vertices)
     edges = [(0, 1), (1, 2), (1, 4), (2, 3), (4, 5), (4, 6)]
-    r"""
+    """
                         0
                         |
                         1
@@ -41,19 +41,42 @@ def param_topological_sort(request):
 
 def test_topological_sort(param_topological_sort):
     dag = param_topological_sort
-    assert check_topological_sort(dag, dag.topological_sort())
+
+    def check_topological_sort(dag, sorted_list):
+        edges = dag.get_edges()
+        order = {}
+        for i in range(len(sorted_list)):
+            order[sorted_list[i]] = i
+        for e in edges:
+            u, v = e
+            if order[u] > order[v]:
+                return False, u, v
+        return True, None, None
+
+    res, u, v = check_topological_sort(dag, dag.topological_sort())
+    assert res, f"{v} before {u} in topological sort, while edge ({u}, {v}) present"
 
 
-def check_topological_sort(dag, sorted_list):
-    edges = dag.get_edges()
-    order = {}
-    for i in range(len(sorted_list)):
-        order[sorted_list[i]] = i
-    for e in edges:
-        u, v = e
-        if order[u] > order[v]:
-            return False
-    return True
+@pytest.fixture(scope="function",
+                params=[(dag_1(),
+                        ['get_5_numbers', 'fib_2', 'slow_1', 'slow_3', 'fib_3',
+                         'slow_2', 'get_sum', 'fib_1', 'check', 'get_result'],
+                        [{'get_5_numbers'}, {'fib_2', 'slow_1', 'slow_3', 'fib_3', 'slow_2', 'fib_1'},
+                         set(), set(), set(), set(), {'get_sum'}, set(), {'check'}, {'get_result'}, set()])],
+                ids=["first_example"])
+def param_ready_vertices_generator(request):
+    return request.param
+
+
+def test_ready_vertices_generator(param_ready_vertices_generator):
+    dag, order, expected_output = param_ready_vertices_generator
+    g = dag.ready_vertices_generator()
+    output = [next(g)]
+    g.send(None)
+    for f in order:
+        output.append(g.send(f))
+        next(g)
+    assert output == expected_output
 
 
 @pytest.fixture(scope="function",
@@ -72,4 +95,3 @@ def test_get_subgraph(param_get_subgraph):
     edges = set(subgraph.get_edges())
     expected_vertices, expected_edges = expected_output
     assert (vertices == expected_vertices) and (edges == expected_edges)
-
