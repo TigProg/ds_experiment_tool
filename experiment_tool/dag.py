@@ -67,21 +67,21 @@ class DAG:
         for v in self._graph_in:
             if not self._graph_in[v]:
                 set_new.add(v)
-        log.info(f"initial set: {set_new}")
+        log.debug(f"initial set: {set_new}")
         while True:
             yield set_new
             set_new = set()
             vert_ready = yield
-            log.info(f"vertex received: {vert_ready}")
+            log.debug(f"vertex received: {vert_ready}")
             set_ready.add(vert_ready)
-            log.info(f"set_ready: {set_ready}")
+            log.debug(f"set_ready: {set_ready}")
             for v in self._graph_out[vert_ready]:
                 for u in self._graph_in[v]:
                     if u not in set_ready:
                         break
                 else:
                     set_new.add(v)
-            log.info(f"set_new: {set_new}")
+            log.debug(f"set_new: {set_new}")
 
     def get_subgraph(self, metrics, modified=None):
         """

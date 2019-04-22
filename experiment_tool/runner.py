@@ -27,16 +27,30 @@ class Runner:
 
         self._storage = FunctionRunStorage(path='test.db')
 
-    def run(self) -> None:
+    def run(self, *, multiproc: bool = False) -> None:
         start_time = time()
         log.info('start experiment')
 
-        # TODO
-        # add DAG().get_subgraph() for metrics
+        # new_dag = self._dag.get_subgraph(self.metrics)
+        new_dag = self._dag
 
-        for func_name in self._dag.topological_sort():
-            log.info('execute function: %s', func_name)
-            self._execute_function(func_name)
+        if multiproc:
+            gen = new_dag.ready_vertices_generator()
+            functions = list(gen.send(None))
+            next(gen)
+            while functions:
+                log.info('functions to run: %s', functions)
+                new_functions = []
+                for f in functions:
+                    self._execute_function(f)
+                    temp = gen.send(f)
+                    next(gen)
+                    new_functions.extend(temp)
+                functions = new_functions[:]
+        else:
+            for func_name in new_dag.topological_sort():
+                log.info('execute function: %s', func_name)
+                self._execute_function(func_name)
 
         for metric in self.metrics:
             log.info('METRIC %s = %s', metric, self._args[metric])
