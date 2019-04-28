@@ -69,9 +69,8 @@ class DAG:
                 set_new.add(v)
         log.info(f"initial set: {set_new}")
         while True:
-            yield set_new
+            vert_ready = yield set_new
             set_new = set()
-            vert_ready = yield
             log.info(f"vertex received: {vert_ready}")
             set_ready.add(vert_ready)
             log.info(f"set_ready: {set_ready}")
@@ -109,8 +108,7 @@ class DAG:
                     recalculate = True
             if recalculate:
                 vertices.add(x)
-                return True
-            return False
+            return recalculate
 
         for v in modified:
             if v not in visited:

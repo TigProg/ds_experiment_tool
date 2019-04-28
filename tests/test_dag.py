@@ -59,7 +59,7 @@ def test_topological_sort(param_topological_sort):
 
 @pytest.fixture(scope="function",
                 params=[(dag_1(),
-                        ['get_5_numbers', 'fib_2', 'slow_1', 'slow_3', 'fib_3',
+                        [None, 'get_5_numbers', 'fib_2', 'slow_1', 'slow_3', 'fib_3',
                          'slow_2', 'get_sum', 'fib_1', 'check', 'get_result'],
                         [{'get_5_numbers'}, {'fib_2', 'slow_1', 'slow_3', 'fib_3', 'slow_2', 'fib_1'},
                          set(), set(), set(), set(), {'get_sum'}, set(), {'check'}, {'get_result'}, set()])],
@@ -71,11 +71,9 @@ def param_ready_vertices_generator(request):
 def test_ready_vertices_generator(param_ready_vertices_generator):
     dag, order, expected_output = param_ready_vertices_generator
     g = dag.ready_vertices_generator()
-    output = [next(g)]
-    g.send(None)
+    output = []
     for f in order:
         output.append(g.send(f))
-        next(g)
     assert output == expected_output
 
 
