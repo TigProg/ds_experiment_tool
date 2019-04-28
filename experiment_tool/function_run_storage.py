@@ -1,7 +1,7 @@
-import sqlite3
 import inspect
 import logging
 import pickle
+import sqlite3
 from typing import Any, Callable, Dict
 
 log = logging.getLogger(__name__)
@@ -44,18 +44,18 @@ class FunctionRunStorage:
         self.conn.commit()
         log.debug('finish FunctionRunStorage.add_function')
 
-    def get_function_result(self, func: Callable, args: Dict[str, Any]):
+    def get_function_result(self, func: Callable, args: Dict[str, Any]) -> Any:
         log.debug('start FunctionRunStorage.get_function_result')
         function_run_info = FunctionRunInfo(func, args)
         self._cursor.execute(
             """
-            SELECT * FROM functions
+            SELECT result FROM functions
             WHERE function_code=:code AND args=:args
             """,
             {"code": function_run_info.code, "args": function_run_info.args}
         )
         res = self._cursor.fetchone()
-        if res is not None:
-            res = pickle.loads(res[2])
         log.debug('finish FunctionRunStorage.get_function_result')
+        if res is not None:
+            res = pickle.loads(res[0])
         return res
