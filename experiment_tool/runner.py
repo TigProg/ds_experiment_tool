@@ -1,8 +1,9 @@
 import logging
+import multiprocessing
 from time import time
 from typing import Any, Dict, Tuple
 
-from experiment_tool.utils import Scope
+from experiment_tool.scope import MemoryScope
 from experiment_tool.dag_reader import example_reader
 from experiment_tool.function_run_storage import FunctionRunStorage
 
@@ -21,7 +22,7 @@ class Runner:
         self.metrics = metrics
 
         self._dag, self._funcs, arg_names = example_reader(self.exp_name)
-        self._args = Scope(arg_names)
+        self._args = MemoryScope(arg_names)
         for arg_name, arg_value in self.init_args.items():
             self._args[arg_name] = arg_value
 
@@ -60,7 +61,10 @@ class Runner:
 
     def _execute_function(self, func_name: str) -> None:
         func_obj, args_names, result_names = self._funcs[func_name]
-        args_mapping = self._args.get_subdict(args_names)
+        args_mapping = {
+                key: self._args[key] for key in iter(self._args)
+        }
+
         func_result = self._storage.get_function_result(func_obj, args_mapping)
 
         if func_result is None:

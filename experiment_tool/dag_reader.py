@@ -24,7 +24,7 @@ def get_experiment(experiment_name: str, package: str = 'experiments') \
     try:
         module = importlib.import_module(experiment_name)
         log.debug('module with experiment successfully loaded')
-        experiment = module.__dict__['experiment']
+        experiment = module.experiment
         log.debug('experiment successfully loaded')
         return experiment
     except ModuleNotFoundError:
