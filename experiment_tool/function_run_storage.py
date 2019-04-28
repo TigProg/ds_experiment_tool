@@ -44,7 +44,7 @@ class FunctionRunStorage:
         self.conn.commit()
         log.debug('finish FunctionRunStorage.add_function')
 
-    def get_function_result(self, func: Callable, args: Dict[str, Any]):
+    def get_function_result(self, func: Callable, args: Dict[str, Any]) -> Any:
         log.debug('start FunctionRunStorage.get_function_result')
         function_run_info = FunctionRunInfo(func, args)
         self._cursor.execute(
@@ -56,4 +56,6 @@ class FunctionRunStorage:
         )
         res = self._cursor.fetchone()
         log.debug('finish FunctionRunStorage.get_function_result')
+        if res is not None:
+            res = pickle.loads(res[0])
         return res
