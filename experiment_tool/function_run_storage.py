@@ -4,6 +4,9 @@ import pickle
 import sqlite3
 from typing import Any, Callable, Dict
 
+from experiment_tool.utils import Maybe
+
+
 log = logging.getLogger(__name__)
 
 
@@ -17,12 +20,12 @@ class FunctionRunInfo:
 class FunctionRunStorage:
     def __init__(self, path):
         self.path = path
-        self.conn = sqlite3.connect(path)
+        self.conn = sqlite3.connect(path, check_same_thread=False)
         self._cursor = self.conn.cursor()
         self._cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS functions
-            (function_code, args, result,
+            (function_code TEXT, args TEXT, result BLOB,
             UNIQUE(function_code, args))
             """
         )
@@ -44,7 +47,8 @@ class FunctionRunStorage:
         self.conn.commit()
         log.debug('finish FunctionRunStorage.add_function')
 
-    def get_function_result(self, func: Callable, args: Dict[str, Any]) -> Any:
+    def get_function_result(self, func: Callable, args: Dict[str, Any]) \
+            -> Maybe:
         log.debug('start FunctionRunStorage.get_function_result')
         function_run_info = FunctionRunInfo(func, args)
         self._cursor.execute(
@@ -58,4 +62,5 @@ class FunctionRunStorage:
         log.debug('finish FunctionRunStorage.get_function_result')
         if res is not None:
             res = pickle.loads(res[0])
-        return res
+            return Maybe(res)
+        return Maybe(nothing=True)
