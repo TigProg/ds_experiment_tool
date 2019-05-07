@@ -1,3 +1,4 @@
+import hashlib
 import inspect
 import logging
 import os
@@ -12,10 +13,11 @@ log = logging.getLogger(__name__)
 
 class FunctionRunInfo:
     def __init__(self, func: Callable, args: Dict[str, Any]):
-        self.code_hash = hash(inspect.getsource(func))
-        self.args_hash = hash(str(sorted(args.items(), key=lambda x: x[0])))
-        self.path = os.path.join(os.path.split(os.path.dirname(__file__))[0],
-                                 "results", str(hash((self.code_hash, self.args_hash))))
+        self.code_hash = hashlib.md5(inspect.getsource(func).encode()).hexdigest()
+        self.args_hash = hashlib.md5(str(sorted(args.items(), key=lambda x: x[0])).encode()).hexdigest()
+        self.path = os.path.join(os.path.split(os.path.dirname(__file__))[0], "results",
+                                 hashlib.md5("".join([self.code_hash, self.args_hash]).encode()).hexdigest()
+                                 )
 
 
 class FunctionRunStorage:
@@ -32,9 +34,9 @@ class FunctionRunStorage:
         )
 
     def add_function(self, func: Callable, args: Dict[str, Any], result: Any):
-        log.debug('start FunctionRunStorage.add_function')
         function_run_info = FunctionRunInfo(func, args)
         if self.get_function_result(func, args).is_nothing():
+            log.debug('adding function to storage')
             with open(function_run_info.path, 'wb') as f:
                 pickle.dump(result, f)
             self._cursor.execute(
@@ -49,11 +51,9 @@ class FunctionRunStorage:
                 )
             )
             self.conn.commit()
-        log.debug('finish FunctionRunStorage.add_function')
 
     def get_function_result(self, func: Callable, args: Dict[str, Any]) \
             -> Maybe:
-        log.debug('start FunctionRunStorage.get_function_result')
         function_run_info = FunctionRunInfo(func, args)
         self._cursor.execute(
             """
@@ -63,7 +63,6 @@ class FunctionRunStorage:
             {"code_hash": function_run_info.code_hash, "args_hash": function_run_info.args_hash}
         )
         res = self._cursor.fetchone()
-        log.debug('finish FunctionRunStorage.get_function_result')
         if res is not None:
             res_path = res[0]
             with open(res_path, 'rb') as f:
