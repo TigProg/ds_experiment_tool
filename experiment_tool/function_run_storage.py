@@ -65,7 +65,7 @@ class FunctionRunStorage:
         res = self._cursor.fetchone()
         log.debug('finish FunctionRunStorage.get_function_result')
         if res is not None:
-            res_path = pickle.loads(res[0])
+            res_path = res[0]
             with open(res_path, 'rb') as f:
                 return Maybe(pickle.load(f))
         return Maybe(nothing=True)
