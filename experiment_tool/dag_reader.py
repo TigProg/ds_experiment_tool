@@ -9,29 +9,28 @@ from experiment_tool.dag import DAG
 log = logging.getLogger(__name__)
 
 
-def get_experiment(experiment_name: str, package: str = 'experiments') \
-        -> Dict[Callable, List]:
+def get_experiment(experiment_path: str) -> Dict[Callable, List]:
     """
-    Get hardcoded experiment
-    :param experiment_name:
-    :param: package:
+    Get experiment from python file
+    :param experiment_path:
     :return: functions with arguments
     """
-    saved_path = sys.path
-    path_to_exp = os.path.join(os.getcwd(), package)
+    exp_path, exp_file = os.path.split(experiment_path)
+    exp_module, _ = os.path.splitext(exp_file)
 
-    sys.path.insert(0, path_to_exp)
+    saved_path = sys.path
+    sys.path.insert(0, exp_path)
     try:
-        module = importlib.import_module(experiment_name)
+        module = importlib.import_module(exp_module)
         log.debug('module with experiment successfully loaded')
         experiment = module.experiment
         log.debug('experiment successfully loaded')
         return experiment
     except ModuleNotFoundError:
-        log.error('module %s with experiment failed to load', package)
+        log.error('module %s with experiment failed to load', exp_module)
         raise
     except KeyError:
-        log.error('experiment from module %s failed to load', package)
+        log.error('experiment from module %s failed to load', exp_module)
         raise
     finally:
         sys.path = saved_path

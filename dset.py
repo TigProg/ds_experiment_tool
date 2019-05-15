@@ -1,13 +1,27 @@
 import logging
 
-from experiment_tool.utils import init_logger
+from experiment_tool.utils import init_logger, create_parser
 from experiment_tool.runner import Runner
 
 
 if __name__ == '__main__':
-    init_logger(logging.INFO)
+    parser = create_parser()
+    args = parser.parse_args()
+
+    if args.debug:
+        init_logger(logging.DEBUG)
+    else:
+        init_logger(logging.INFO)
+
     log = logging.getLogger(__name__)
+
     log.info('Started')
-    runner = Runner('first_example', {'name': '1 2 3 2 31'}, ('result', ))
-    runner.run(multiproc=True)
+
+    runner = Runner(
+        args.path[0].name,
+        dict(args.variables),
+        args.metric
+    )
+    runner.run(multiproc=args.multiprocessing)
+
     log.info('Finished')

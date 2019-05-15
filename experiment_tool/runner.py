@@ -1,7 +1,7 @@
 import logging
 import multiprocessing
 from time import time
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List
 
 from experiment_tool.dag_reader import example_reader
 from experiment_tool.function_run_storage import FunctionRunStorage
@@ -36,15 +36,15 @@ def dirty_run(func, scope):
 
 class Runner:
     def __init__(self,
-                 experiment_name: str,
+                 experiment_path: str,
                  dataset_name: Dict[str, Any],
-                 metrics: Tuple[str, ...]
+                 metrics: List[str]
                  ) -> None:
-        self.exp_name = experiment_name
+        self.exp_path = experiment_path
         self.init_args = dataset_name
         self.metrics = metrics
 
-        self._dag, self._funcs, arg_names = example_reader(self.exp_name)
+        self._dag, self._funcs, arg_names = example_reader(self.exp_path)
         self._args = MemoryScope(arg_names)
         for arg_name, arg_value in self.init_args.items():
             self._args[arg_name] = arg_value
