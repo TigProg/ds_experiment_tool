@@ -1,6 +1,6 @@
 import argparse
 import logging
-from typing import Any
+from typing import Any, Callable
 
 
 __version__ = '0.0.1'
@@ -76,3 +76,7 @@ class Maybe:
             return self._obj
         log.error('this Maybe is Nothing')
         raise TypeError('this Maybe is Nothing')
+
+
+def encrypt_str(string: str, encryption_func: Callable):
+    return encryption_func(string.encode()).hexdigest()

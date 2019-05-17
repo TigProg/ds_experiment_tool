@@ -6,18 +6,27 @@ import pickle
 import sqlite3
 from typing import Any, Callable, Dict
 
-from experiment_tool.utils import Maybe
+from experiment_tool.utils import Maybe, encrypt_str
 
 log = logging.getLogger(__name__)
 
 
 class FunctionRunInfo:
     def __init__(self, func: Callable, args: Dict[str, Any]):
-        self.code_hash = hashlib.md5(inspect.getsource(func).encode()).hexdigest()
-        self.args_hash = hashlib.md5(str(sorted(args.items(), key=lambda x: x[0])).encode()).hexdigest()
-        self.path = os.path.join(os.path.split(os.path.dirname(__file__))[0], "results",
-                                 hashlib.md5("".join([self.code_hash, self.args_hash]).encode()).hexdigest()
-                                 )
+        self.code_hash = encrypt_str(inspect.getsource(func), hashlib.md5)
+        self.args_hash = encrypt_str(
+            str(sorted(args.items(), key=lambda x: x[0])), hashlib.md5
+        )
+        dir_path = os.path.join(
+            os.path.split(os.path.dirname(__file__))[0],
+            "results",
+        )
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+        self.path = os.path.join(
+            dir_path,
+            encrypt_str("".join([self.code_hash, self.args_hash]), hashlib.md5)
+        )
 
 
 class FunctionRunStorage:
@@ -60,7 +69,10 @@ class FunctionRunStorage:
             SELECT result_path FROM functions
             WHERE function_code_hash=:code_hash AND args_hash=:args_hash
             """,
-            {"code_hash": function_run_info.code_hash, "args_hash": function_run_info.args_hash}
+            {
+                "code_hash": function_run_info.code_hash,
+                "args_hash": function_run_info.args_hash,
+            }
         )
         res = self._cursor.fetchone()
         if res is not None:

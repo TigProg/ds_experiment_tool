@@ -20,8 +20,9 @@ if __name__ == '__main__':
     runner = Runner(
         args.path[0].name,
         dict(args.variables),
-        args.metric
+        args.metric,
+        args.multiprocessing
     )
-    runner.run(multiproc=args.multiprocessing)
+    runner.run()
 
     log.info('Finished')

@@ -38,11 +38,13 @@ class Runner:
     def __init__(self,
                  experiment_path: str,
                  dataset_name: Dict[str, Any],
-                 metrics: List[str]
+                 metrics: List[str],
+                 multiproc: bool,
                  ) -> None:
         self.exp_path = experiment_path
         self.init_args = dataset_name
         self.metrics = metrics
+        self.multiproc = multiproc
 
         self._dag, self._funcs, arg_names = example_reader(self.exp_path)
         self._args = MemoryScope(arg_names)
@@ -51,14 +53,14 @@ class Runner:
 
         self._storage = FunctionRunStorage(path='test.db')
 
-    def run(self, *, multiproc: bool = False) -> None:
+    def run(self) -> None:
         start_time = time()
         log.info('start experiment')
 
         # new_dag = self._dag.get_subgraph(self.metrics)
         new_dag = self._dag
 
-        if multiproc:
+        if self.multiproc:
             gen = new_dag.ready_vertices_generator()
             functions = list(gen.send(None))
 
@@ -85,6 +87,7 @@ class Runner:
 
                 for metric in self.metrics:
                     log.info('METRIC %s = %s', metric, scope[metric])
+                    print('METRIC {} = {}'.format(metric, scope[metric]))
         else:
             for func_name in new_dag.topological_sort():
                 log.info('execute function: %s', func_name)
@@ -92,6 +95,7 @@ class Runner:
 
             for metric in self.metrics:
                 log.info('METRIC %s = %s', metric, self._args[metric])
+                print('METRIC {} = {}'.format(metric, self._args[metric]))
 
         log.info('finish experiment')
         log.info('experiment run time: %s seconds', time() - start_time)

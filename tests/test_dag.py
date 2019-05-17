@@ -5,14 +5,19 @@ from experiment_tool.dag import DAG
 
 
 def dag_1():
-    vertices = ['get_5_numbers', 'slow_1', 'slow_2', 'slow_3', 'fib_1', 'fib_2', 'fib_3',
-                'get_sum', 'check', 'get_result']
+    vertices = [
+        'get_5_numbers', 'slow_1', 'slow_2', 'slow_3',
+        'fib_1', 'fib_2', 'fib_3', 'get_sum', 'check', 'get_result'
+    ]
     random.shuffle(vertices)
-    edges = [('get_5_numbers', 'slow_1'), ('get_5_numbers', 'slow_2'), ('get_5_numbers', 'slow_3'),
-             ('get_5_numbers', 'fib_1'), ('get_5_numbers', 'fib_2'), ('get_5_numbers', 'fib_3'),
-             ('slow_1', 'get_sum'), ('slow_2', 'get_sum'), ('slow_3', 'get_sum'),
-             ('fib_1', 'check'), ('fib_2', 'check'), ('fib_3', 'check'),
-             ('get_sum', 'get_result'), ('check', 'get_result')]
+    edges = [
+        ('get_5_numbers', 'slow_1'), ('get_5_numbers', 'slow_2'),
+        ('get_5_numbers', 'slow_3'), ('get_5_numbers', 'fib_1'),
+        ('get_5_numbers', 'fib_2'), ('get_5_numbers', 'fib_3'),
+        ('slow_1', 'get_sum'), ('slow_2', 'get_sum'), ('slow_3', 'get_sum'),
+        ('fib_1', 'check'), ('fib_2', 'check'), ('fib_3', 'check'),
+        ('get_sum', 'get_result'), ('check', 'get_result')
+    ]
     return DAG(vertices, edges)
 
 
@@ -54,7 +59,8 @@ def test_topological_sort(param_topological_sort):
         return True, None, None
 
     res, u, v = check_topological_sort(dag, dag.topological_sort())
-    assert res, f"{v} before {u} in topological sort, while edge ({u}, {v}) present"
+    assert res, "{v} before {u} in topological sort, " \
+                "while edge ({u}, {v}) present".format(v=v, u=u)
 
 
 @pytest.fixture(scope="function",
